@@ -22,7 +22,6 @@ date: 19th May 2015
 * Running a Docker image produces a Docker container that contains the running application.
 * Multiple containers can be created from the same image.
 
-
 ## How is this relevant for data analysis?
 
 * Provides stable environment during analysis
@@ -32,3 +31,52 @@ date: 19th May 2015
     - To ensure an analysis is reproducible we need to communicate all software (including the version used) as well as the code used to carry out the analysis.
     - Docker makes this easy by providing a way to distribute the complete environment used for the analysis.
     - This can include all the software, a script to run the analysis and even the data.
+
+# Building a Docker image for data analysis
+## Differential expression / eQTL analysis
+
+* Set up Docker image with support for differential expression and eQTL analysis using R.
+* Will show parts of relevant Docker file throughout. Complete file is available [online](https://github.com/jknightlab/heatshock/blob/master/Dockerfile).  
+
+## Choosing a base image
+
+* Docker files are plain text files with instructions on how to build an image.
+* Can either build upon an existing image or start from scratch.
+* DockerHub provides a large number of images that can serve as a starting point.
+* For an analysis that relies mostly on R the [Bioconductor images](https://registry.hub.docker.com/repos/bioconductor/) are a good starting point.
+* A minimal Docker file also requires a *maintainer* field.
+
+```docker
+FROM bioconductor/release_microarray:latest
+MAINTAINER Peter Humburg <peter.humburg@gmail.com>
+```
+
+## Installing additional software
+
+* Bioconductor images are based on Debian.
+* Can install software using `apt-get` or through other channels.
+* Install LaTeX, pandoc and a web server
+
+```docker
+RUN apt-get update -y && apt-get install -y haskell-platform nginx lmodern texlive-full libssh-dev  
+RUN cabal update && cabal install pandoc
+```
+
+## Downloading software
+
+* Software not available through a package management system can be downloaded and installed directly.
+* Install *PLINK* by downloading the executable.
+
+```.docker
+RUN cd /tmp && wget -q https://www.cog-genomics.org/static/bin/plink150507/plink_linux_x86_64.zip && unzip plink_linux_x86_64.zip && cp plink /usr/local/bin/ 
+```
+
+## Install R packages
+
+* Can execute any command in the shell.
+* Everything installed by previous commands is available.
+
+```docker
+RUN Rscript -e "biocLite(c('sparcl', 'dplyr', 'tidyr', 'devtools', 'illuminaHumanv3.db', 'pander', 'ggdendro'))"
+RUN Rscript -e "devtools::install_github('hadley/readr')"
+```

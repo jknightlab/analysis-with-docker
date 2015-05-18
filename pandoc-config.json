@@ -252,6 +252,8 @@
 			// if your template includes loops; see this plugin's README.
 			"variables":
 			{
+				"theme": "sydney"
+			}
 			},
 
 			// By default, text is wrapped for the output format.

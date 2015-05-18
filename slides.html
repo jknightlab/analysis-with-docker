@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Peter Humburg" />
+  <title>Data Analysis with Docker</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="reveal.js/css/reveal.min.css"/>
+    <style type="text/css">code{white-space: pre;}</style>
+    <link rel="stylesheet" href="reveal.js/css/theme/sydney.css" id="theme">
+    <!-- If the query includes 'print-pdf', include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+      }
+    </script>
+    <!--[if lt IE 9]>
+    <script src="reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+    <h1 class="title">Data Analysis with Docker</h1>
+    <h2 class="author">Peter Humburg</h2>
+    <h3 class="date">19th May 2015</h3>
+</section>
+<section id="TOC">
+<h1>Overview</h1>
+<ul>
+<li><a href="#/introduction">Introduction</a></li>
+<li><a href="#/building-a-docker-image-for-data-analysis">Building a Docker image for data analysis</a></li>
+<li><a href="#/using-the-docker-image">Using the Docker image</a></li>
+</ul>
+</section>
+
+<section><section id="introduction" class="titleslide slide level1"><h1>Introduction</h1></section><section id="what-is-docker" class="slide level2">
+<h1>What is Docker?</h1>
+<ul>
+<li>Platform designed for developing, distributing and running applications.</li>
+<li>A Docker image contains an application and all its dependencies.</li>
+<li>Can be run anywhere with minimal setup and configuration.</li>
+</ul>
+</section><section id="what-is-docker-cont." class="slide level2">
+<h1>What is Docker? (cont.)</h1>
+<ul>
+<li>Similar to a Virtual Machine but lightweight, more portable and efficient.</li>
+<li>A new Docker image can be based on an existing one, inheriting all its content and functionality.</li>
+<li>Multiple images can be linked to create more complex environments.</li>
+</ul>
+</section><section id="using-docker" class="slide level2">
+<h1>Using Docker</h1>
+<ul>
+<li>An application and its dependencies are bundled as a Docker image.</li>
+<li>Docker images are distributed via <a href="https://hub.docker.com/">DockerHub</a> or other repositories.</li>
+<li>Images are downloaded to host machines (local or in the cloud).</li>
+<li>Running a Docker image produces a Docker container that contains the running application.</li>
+<li>Multiple containers can be created from the same image.</li>
+</ul>
+</section><section id="how-is-this-relevant-for-data-analysis" class="slide level2 small-header">
+<h1>How is this relevant for data analysis?</h1>
+<ul>
+<li>Provides stable environment during analysis
+<ul>
+<li>Full control over all software versions used.</li>
+<li>Independent of host system.</li>
+</ul></li>
+<li>Helps to make analysis reproducible
+<ul>
+<li>Docker provides a way to distribute the complete environment used for the analysis.</li>
+<li>This can include all the software, a script to run the analysis and even the data.</li>
+</ul></li>
+</ul>
+</section></section>
+<section><section id="building-a-docker-image-for-data-analysis" class="titleslide slide level1"><h1>Building a Docker image for data analysis</h1></section><section id="differential-expression-eqtl-analysis" class="slide level2 small-header">
+<h1>Differential expression / eQTL analysis</h1>
+<p>Want to create an image that</p>
+<ul>
+<li>runs a specified analysis on start-up</li>
+<li>generates a report and serves it as a web page (including pdf download)<span class="math"><em></em><sup> * </sup></span></li>
+<li>provides interactive access to allow further investigation</li>
+</ul>
+<div class="footnote">
+<span class="math"><em></em><sup> * </sup></span> Using techniques described <a href="http://galahad.well.ox.ac.uk/repro/">here</a>
+</div>
+</section><section id="example" class="slide level2">
+<h1>Example</h1>
+<ul>
+<li>Set up Docker image with support for differential expression and eQTL analysis using R.</li>
+<li>Will show parts of relevant Docker file throughout. Complete file is available <a href="https://github.com/jknightlab/heatshock/blob/master/Dockerfile">online</a>.</li>
+</ul>
+</section><section id="dockerfile" class="slide level2">
+<h1>Dockerfile</h1>
+<ul>
+<li>A Dockerfile is a plain test file that contains a series of instructions to build a Docker image.</li>
+<li>Can use an existing image as base.</li>
+<li>Lists instructions to
+<ul>
+<li>install additional software</li>
+<li>configure the software inside the image</li>
+<li>copy files</li>
+<li>…</li>
+</ul></li>
+</ul>
+</section><section id="choosing-a-base-image" class="slide level2 small-header">
+<h1>Choosing a base image</h1>
+<ul>
+<li>Can either build upon an existing image or start from scratch.</li>
+<li>DockerHub provides a large number of images that can serve as a starting point.</li>
+<li>For an analysis that relies mostly on R the <a href="https://registry.hub.docker.com/repos/bioconductor/">Bioconductor images</a> are a good starting point.</li>
+<li>A minimal Docker file also requires a <em>maintainer</em> field.</li>
+</ul>
+<pre class="docker"><code>FROM bioconductor/release_microarray:latest
+MAINTAINER Peter Humburg &lt;peter.humburg@gmail.com&gt;</code></pre>
+</section><section id="the-bioconductor-images" class="slide level2 small-header">
+<h1>The Bioconductor images</h1>
+<ul>
+<li>Bioconductor provides a series of images with different collections of Biocoductor packages installed.</li>
+<li>The <em>base</em> image contains R, RStudio and the BiocInstaller package.</li>
+<li>The <em>core</em> image contains the <em>base</em> image and basic BioC infrastructure.</li>
+<li>Application specific images build on <em>core</em>: <em>flow</em>, <em>microarray</em>, <em>proteomics</em>, <em>sequencing</em>.</li>
+<li>All images are available for the development and release versions of Bioconductor.</li>
+</ul>
+</section><section id="customising-the-image" class="slide level2 small-header">
+<h1>Customising the image</h1>
+<ul>
+<li>Install LaTeX, pandoc and a web server.</li>
+<li>Add analysis code.</li>
+<li>Configure the image to run the analysis and provide access to HTML and PDF versions of resulting report.</li>
+</ul>
+</section><section id="downloading-software" class="slide level2 small-header">
+<h1>Downloading software</h1>
+<ul>
+<li>Can install software using <code>apt-get</code> or through other channels.</li>
+</ul>
+<pre class="docker"><code>RUN apt-get update -y &amp;&amp; apt-get install -y haskell-platform nginx lmodern texlive-full libssh-dev  
+RUN cabal update &amp;&amp; cabal install pandoc</code></pre>
+<ul>
+<li>Software not available through a package management system can be downloaded and installed directly.</li>
+<li>Install <em>PLINK</em> by downloading the executable.</li>
+</ul>
+<pre class="docker"><code>RUN cd /tmp &amp;&amp; wget -q https://www.cog-genomics.org/static/bin/plink150507/plink_linux_x86_64.zip &amp;&amp; unzip plink_linux_x86_64.zip &amp;&amp; cp plink /usr/local/bin/ </code></pre>
+</section><section id="installing-r-packages" class="slide level2">
+<h1>Installing R packages</h1>
+<ul>
+<li>Can execute any command in the shell.</li>
+<li>Everything installed by previous commands is available.</li>
+</ul>
+<pre class="docker"><code>RUN Rscript -e &quot;biocLite(c(&#39;sparcl&#39;, &#39;dplyr&#39;, &#39;tidyr&#39;, &#39;devtools&#39;, &#39;illuminaHumanv3.db&#39;, &#39;pander&#39;, &#39;ggdendro&#39;))&quot;
+RUN Rscript -e &quot;devtools::install_github(&#39;hadley/readr&#39;)&quot;</code></pre>
+</section><section id="setting-up-the-analysis" class="slide level2">
+<h1>Setting-up the analysis</h1>
+<ul>
+<li>Analysis uses two main files
+<ul>
+<li>Actual analysis contained in RMarkdown file</li>
+<li>Driver script that runs <em>knitr</em> and <em>pandoc</em>, handles errors, copies the completed report to the web server, etc.</li>
+</ul></li>
+</ul>
+</section><section id="include-analysis-scripts" class="slide level2">
+<h1>Include analysis scripts</h1>
+<p>Add data and code to the image</p>
+<pre class="docker"><code>COPY data/ /analysis/data/
+COPY heatshock_analysis.* default.pandoc /analysis/</code></pre>
+</section><section id="running-the-analysis" class="slide level2">
+<h1>Running the analysis</h1>
+<ul>
+<li>Bioconductor uses <a href="http://supervisord.org/">Supervisor</a> to run RStudio</li>
+<li>Adapt <em>Supervisor</em> config file to also run the analysis on startup.</li>
+</ul>
+<pre class="config"><code>[program:analysis]
+command=/usr/bin/Rscript /analysis/analysis.r
+autostart=true
+autorestart=false
+stdout_logfile=/analysis/log/%(program_name)s.log
+stderr_logfile=/analysis/log/%(program_name)s.log</code></pre>
+<pre class="docker"><code>COPY config/supervisored.conf /tmp/
+RUN cat /tmp/supervisored.conf &gt;&gt; /etc/supervisor/conf.d/supervisord.conf</code></pre>
+</section><section id="displaying-results" class="slide level2">
+<h1>Displaying results</h1>
+<ul>
+<li>Generate report using <a href="http://yihui.name/knitr/">knitr</a> and <a href="http://pandoc.org/">pandoc</a>.</li>
+<li>Use <a href="http://nginx.org/en/">nginx</a> to serve resulting web page.</li>
+<li>May want to <a href="http://nginx.com/resources/admin-guide/restricting-access/">restrict access</a> prior to publication.</li>
+</ul>
+</section></section>
+<section><section id="using-the-docker-image" class="titleslide slide level1"><h1>Using the Docker image</h1></section><section id="starting-the-container" class="slide level2">
+<h1>Starting the container</h1>
+<ul>
+<li>Share host directory with container to store <em>knitr</em> cache to allow cache to persist beyond lifetime of container.</li>
+<li>Map ports for RStudio and web site to host ports.</li>
+</ul>
+<pre class="sh"><code>docker run -v /path/to/project/analysis/cache/:/analysis/cache/ \
+    -p 9999:80 -p 8787:8787 analysis</code></pre>
+</section><section id="viewing-results" class="slide level2">
+<h1>Viewing results</h1>
+<ul>
+<li>Access the HTML report at <code>&lt;docker.host.address&gt;:9999</code></li>
+<li>Further explore the data and results interactively through RStudio running at <code>&lt;docker.host.address&gt;:8787</code>.</li>
+</ul>
+</section></section>
+    </div>
+  </div>
+
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.min.js"></script>
+
+  <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        slideNumber: true,
+        theme: 'sydney', // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+//          { src: 'reveal.js/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; }, }
+//          { src: 'reveal.js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+]});
+//	Reveal.configure({slideNumber:true});
+    </script>
+    </body>
+</html>

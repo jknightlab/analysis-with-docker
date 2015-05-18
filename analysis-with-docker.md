@@ -35,12 +35,31 @@ date: 19th May 2015
 # Building a Docker image for data analysis
 ## Differential expression / eQTL analysis
 
+Want to create an image that
+
+* runs a specified analysis on start-up
+* generates a report and serves it as a web page (including pdf download)^[Using techniques described [here](http://galahad.well.ox.ac.uk/repro/)]
+* provides interactive access to allow further investigation 
+ 
+. . .
+
 * Set up Docker image with support for differential expression and eQTL analysis using R.
-* Will show parts of relevant Docker file throughout. Complete file is available [online](https://github.com/jknightlab/heatshock/blob/master/Dockerfile).  
+* Will show parts of relevant Docker file throughout. Complete file is available 
+  [online](https://github.com/jknightlab/heatshock/blob/master/Dockerfile).  
+
+## Dockerfile
+
+* A Dockerfile is a plain test file that contains a series of instructions to 
+  build a Docker image.
+* Can use an existing image as base.
+* Lists instructions to
+	- install additional software
+	- configure the software inside the image
+	- copy files
+	- ...
 
 ## Choosing a base image
 
-* Docker files are plain text files with instructions on how to build an image.
 * Can either build upon an existing image or start from scratch.
 * DockerHub provides a large number of images that can serve as a starting point.
 * For an analysis that relies mostly on R the [Bioconductor images](https://registry.hub.docker.com/repos/bioconductor/) are a good starting point.
@@ -51,27 +70,41 @@ FROM bioconductor/release_microarray:latest
 MAINTAINER Peter Humburg <peter.humburg@gmail.com>
 ```
 
-## Installing additional software
+## The Bioconductor images
 
-* Bioconductor images are based on Debian.
+* Bioconductor provides a series of images with different collections of Biocoductor
+  packages installed.
+* The *base* image contains R, RStudio and the BiocInstaller package.
+* The *core* image contains the *base* image and basic BioC infrastructure.
+* Application specific images build on *core*: *flow*, *microarray*,
+  *proteomics*, *sequencing*.
+* All images are available for the development and release versions of Bioconductor.
+
+## Customising the image
+
+* Install LaTeX, pandoc and a web server.
+* Add analysis code.
+* Configure the image to run the analysis and provide access to HTML and
+  PDF versions of resulting report.
+
+## Downloading software
+
 * Can install software using `apt-get` or through other channels.
-* Install LaTeX, pandoc and a web server
 
 ```docker
 RUN apt-get update -y && apt-get install -y haskell-platform nginx lmodern texlive-full libssh-dev  
 RUN cabal update && cabal install pandoc
 ```
 
-## Downloading software
-
-* Software not available through a package management system can be downloaded and installed directly.
+* Software not available through a package management system can be 
+  downloaded and installed directly.
 * Install *PLINK* by downloading the executable.
 
-```.docker
+```docker
 RUN cd /tmp && wget -q https://www.cog-genomics.org/static/bin/plink150507/plink_linux_x86_64.zip && unzip plink_linux_x86_64.zip && cp plink /usr/local/bin/ 
 ```
 
-## Install R packages
+## Installing R packages
 
 * Can execute any command in the shell.
 * Everything installed by previous commands is available.
@@ -80,3 +113,42 @@ RUN cd /tmp && wget -q https://www.cog-genomics.org/static/bin/plink150507/plink
 RUN Rscript -e "biocLite(c('sparcl', 'dplyr', 'tidyr', 'devtools', 'illuminaHumanv3.db', 'pander', 'ggdendro'))"
 RUN Rscript -e "devtools::install_github('hadley/readr')"
 ```
+
+## Setting-up the analysis
+
+Add data and code to the image
+
+```docker
+COPY data/ /analysis/data/
+COPY heatshock_analysis.* default.pandoc /analysis/
+```
+
+## Running the analysis
+
+* Bioconductor uses [Supervisor](http://supervisord.org/) to run RStudio
+* Adapt *Supervisor* config file to also run the analysis on startup.
+
+```config
+[program:analysis]
+command=/usr/bin/Rscript /analysis/heatshock_analysis.r
+autostart=true
+autorestart=false
+stdout_logfile=/analysis/log/%(program_name)s.log
+stderr_logfile=/analysis/log/%(program_name)s.log
+```
+
+```docker
+COPY config/supervisored.conf /tmp/
+RUN cat /tmp/supervisored.conf >> /etc/supervisor/conf.d/supervisord.conf
+```
+
+## Displaying results
+
+* Generate report using [knitr](http://yihui.name/knitr/) and 
+  [pandoc](http://pandoc.org/).
+* Use [nginx](http://nginx.org/en/) to serve resulting web page.
+* May want to [restrict access](http://nginx.com/resources/admin-guide/restricting-access/) 
+  prior to publication.
+
+
+

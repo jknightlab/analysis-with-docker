@@ -184,3 +184,15 @@ docker run -v /path/to/project/analysis/cache/:/analysis/cache/ \
 * Further explore the data and results interactively through
   RStudio running at `http://<docker.host.address>:8787`.
 
+# Summary
+
+## Advantages
+
+* Docker provides a stable environment for analysis
+* Can be used to distribute data, analysis and results
+* Makes it much easier to reproduce results
+
+## Limitations
+
+* Docker images can become large (and acumulate on the host)
+* Running docker requires root access

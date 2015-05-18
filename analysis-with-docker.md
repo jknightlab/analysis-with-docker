@@ -111,7 +111,7 @@ RUN cabal update && cabal install pandoc
 RUN cd /tmp && wget -q https://www.cog-genomics.org/static/bin/plink150507/plink_linux_x86_64.zip && unzip plink_linux_x86_64.zip && cp plink /usr/local/bin/ 
 ```
 
-## Installing R packages
+## Install R packages
 
 * Can execute any command in the shell.
 * Everything installed by previous commands is available.

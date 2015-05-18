@@ -116,6 +116,13 @@ RUN Rscript -e "devtools::install_github('hadley/readr')"
 
 ## Setting-up the analysis
 
+* Analysis uses two main files
+	- Actual analysis contained in RMarkdown file
+	- Driver script that runs *knitr* and *pandoc*, handles errors, 
+	  copies the completed report to the web server, etc.
+
+## Include analysis scripts
+
 Add data and code to the image
 
 ```docker
@@ -130,7 +137,7 @@ COPY heatshock_analysis.* default.pandoc /analysis/
 
 ```config
 [program:analysis]
-command=/usr/bin/Rscript /analysis/heatshock_analysis.r
+command=/usr/bin/Rscript /analysis/analysis.r
 autostart=true
 autorestart=false
 stdout_logfile=/analysis/log/%(program_name)s.log
@@ -150,5 +157,22 @@ RUN cat /tmp/supervisored.conf >> /etc/supervisor/conf.d/supervisord.conf
 * May want to [restrict access](http://nginx.com/resources/admin-guide/restricting-access/) 
   prior to publication.
 
+# Using the Docker image
 
+## Starting the container
+
+* Share host directory with container to store *knitr* cache to 
+  allow cache to persist beyond lifetime of container.
+* Map ports for RStudio and web site to host ports.
+
+```sh
+docker run -v /path/to/project/analysis/cache/:/analysis/cache/ \
+	-p 9999:80 -p 8787:8787 analysis
+```
+
+## Viewing results
+
+* Access the HTML report at `<docker.host.address>:9999`
+* Further explore the data and results interactively through
+  RStudio running at `<docker.host.address>:8787`.
 

@@ -40,6 +40,7 @@
 <li><a href="#/introduction">Introduction</a></li>
 <li><a href="#/building-a-docker-image-for-data-analysis">Building a Docker image for data analysis</a></li>
 <li><a href="#/using-the-docker-image">Using the Docker image</a></li>
+<li><a href="#/summary">Summary</a></li>
 </ul>
 </section>
 
@@ -50,7 +51,7 @@
 <li>A Docker image contains an application and all its dependencies.</li>
 <li>Can be run anywhere with minimal setup and configuration.</li>
 </ul>
-</section><section id="what-is-docker-cont." class="slide level2">
+</section><section id="what-is-docker-cont." class="slide level2 small-header">
 <h1>What is Docker? (cont.)</h1>
 <ul>
 <li>Similar to a Virtual Machine but lightweight, more portable and efficient.</li>
@@ -142,22 +143,24 @@ MAINTAINER Peter Humburg &lt;peter.humburg@gmail.com&gt;</code></pre>
 <ul>
 <li>Can install software using <code>apt-get</code> or through other channels.</li>
 </ul>
-<pre class="docker"><code>RUN apt-get update -y &amp;&amp; apt-get install -y haskell-platform nginx lmodern texlive-full libssh-dev  
+<pre class="docker"><code>RUN apt-get update -y &amp;&amp; apt-get install -y haskell-platform nginx \ 
+    lmodern texlive-full libssh-dev  
 RUN cabal update &amp;&amp; cabal install pandoc</code></pre>
 <ul>
 <li>Software not available through a package management system can be downloaded and installed directly.</li>
 <li>Install <em>PLINK</em> by downloading the executable.</li>
 </ul>
 <pre class="docker"><code>RUN cd /tmp &amp;&amp; wget -q https://www.cog-genomics.org/static/bin/plink150507/plink_linux_x86_64.zip &amp;&amp; unzip plink_linux_x86_64.zip &amp;&amp; cp plink /usr/local/bin/ </code></pre>
-</section><section id="installing-r-packages" class="slide level2">
-<h1>Installing R packages</h1>
+</section><section id="install-r-packages" class="slide level2">
+<h1>Install R packages</h1>
 <ul>
 <li>Can execute any command in the shell.</li>
 <li>Everything installed by previous commands is available.</li>
 </ul>
-<pre class="docker"><code>RUN Rscript -e &quot;biocLite(c(&#39;sparcl&#39;, &#39;dplyr&#39;, &#39;tidyr&#39;, &#39;devtools&#39;, &#39;illuminaHumanv3.db&#39;, &#39;pander&#39;, &#39;ggdendro&#39;))&quot;
+<pre class="docker"><code>RUN Rscript -e &quot;biocLite(c(&#39;dplyr&#39;, &#39;tidyr&#39;, &#39;devtools&#39;, \
+        &#39;illuminaHumanv3.db&#39;, &#39;pander&#39;, &#39;ggdendro&#39;))&quot;
 RUN Rscript -e &quot;devtools::install_github(&#39;hadley/readr&#39;)&quot;</code></pre>
-</section><section id="setting-up-the-analysis" class="slide level2">
+</section><section id="setting-up-the-analysis" class="slide level2 small-header">
 <h1>Setting-up the analysis</h1>
 <ul>
 <li>Analysis uses two main files
@@ -166,7 +169,7 @@ RUN Rscript -e &quot;devtools::install_github(&#39;hadley/readr&#39;)&quot;</cod
 <li>Driver script that runs <em>knitr</em> and <em>pandoc</em>, handles errors, copies the completed report to the web server, etc.</li>
 </ul></li>
 </ul>
-</section><section id="include-analysis-scripts" class="slide level2">
+</section><section id="include-analysis-scripts" class="slide level2 small-header">
 <h1>Include analysis scripts</h1>
 <p>Add data and code to the image</p>
 <pre class="docker"><code>COPY data/ /analysis/data/
@@ -193,7 +196,7 @@ RUN cat /tmp/supervisored.conf &gt;&gt; /etc/supervisor/conf.d/supervisord.conf<
 <li>May want to <a href="http://nginx.com/resources/admin-guide/restricting-access/">restrict access</a> prior to publication.</li>
 </ul>
 </section></section>
-<section><section id="using-the-docker-image" class="titleslide slide level1"><h1>Using the Docker image</h1></section><section id="starting-the-container" class="slide level2">
+<section><section id="using-the-docker-image" class="titleslide slide level1"><h1>Using the Docker image</h1></section><section id="starting-the-container" class="slide level2 small-header">
 <h1>Starting the container</h1>
 <ul>
 <li>Share host directory with container to store <em>knitr</em> cache to allow cache to persist beyond lifetime of container.</li>
@@ -204,8 +207,23 @@ RUN cat /tmp/supervisored.conf &gt;&gt; /etc/supervisor/conf.d/supervisord.conf<
 </section><section id="viewing-results" class="slide level2">
 <h1>Viewing results</h1>
 <ul>
-<li>Access the HTML report at <code>&lt;docker.host.address&gt;:9999</code></li>
-<li>Further explore the data and results interactively through RStudio running at <code>&lt;docker.host.address&gt;:8787</code>.</li>
+<li>Access the HTML report at <code>http://&lt;docker.host.address&gt;:9999</code></li>
+<li>Further explore the data and results interactively through RStudio running at <code>http://&lt;docker.host.address&gt;:8787</code>.</li>
+</ul>
+</section></section>
+<section><section id="summary" class="titleslide slide level1"><h1>Summary</h1></section><section id="advantages" class="slide level2">
+<h1>Advantages</h1>
+<ul>
+<li>Docker provides a stable environment for analysis</li>
+<li>Can be used to distribute data, analysis and results</li>
+<li>Makes it much easier to reproduce results</li>
+</ul>
+</section><section id="limitations" class="slide level2">
+<h1>Limitations</h1>
+<ul>
+<li>Docker images can become large (and accumulate on the host)</li>
+<li>Running docker requires root access</li>
+<li>Sharing files with the host can be tricky</li>
 </ul>
 </section></section>
     </div>

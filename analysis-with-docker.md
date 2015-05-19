@@ -194,5 +194,6 @@ docker run -v /path/to/project/analysis/cache/:/analysis/cache/ \
 
 ## Limitations
 
-* Docker images can become large (and acumulate on the host)
+* Docker images can become large (and accumulate on the host)
 * Running docker requires root access
+* Sharing files with the host can be tricky

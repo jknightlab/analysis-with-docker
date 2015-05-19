@@ -11,7 +11,7 @@ date: 19th May 2015
 * A Docker image contains an application and all its dependencies.
 * Can be run anywhere with minimal setup and configuration.
 
-## What is Docker? (cont.)
+## What is Docker? (cont.) {.small-header}
 * Similar to a Virtual Machine but lightweight, more portable and efficient.
 * A new Docker image can be based on an existing one, inheriting all its content and functionality.
 * Multiple images can be linked to create more complex environments.
@@ -111,7 +111,7 @@ RUN cabal update && cabal install pandoc
 RUN cd /tmp && wget -q https://www.cog-genomics.org/static/bin/plink150507/plink_linux_x86_64.zip && unzip plink_linux_x86_64.zip && cp plink /usr/local/bin/ 
 ```
 
-## Installing R packages
+## Install R packages
 
 * Can execute any command in the shell.
 * Everything installed by previous commands is available.
@@ -167,7 +167,7 @@ RUN cat /tmp/supervisored.conf >> /etc/supervisor/conf.d/supervisord.conf
 
 # Using the Docker image
 
-## Starting the container
+## Starting the container {.small-header}
 
 * Share host directory with container to store *knitr* cache to 
   allow cache to persist beyond lifetime of container.
@@ -184,3 +184,16 @@ docker run -v /path/to/project/analysis/cache/:/analysis/cache/ \
 * Further explore the data and results interactively through
   RStudio running at `http://<docker.host.address>:8787`.
 
+# Summary
+
+## Advantages
+
+* Docker provides a stable environment for analysis
+* Can be used to distribute data, analysis and results
+* Makes it much easier to reproduce results
+
+## Limitations
+
+* Docker images can become large (and accumulate on the host)
+* Running docker requires root access
+* Sharing files with the host can be tricky
